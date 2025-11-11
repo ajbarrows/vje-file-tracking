@@ -57,16 +57,22 @@ def clean_filename(filename: str) -> str:
     
     # Remove extension
     name = filename.rsplit('.', 1)[0]
-    # Remove number prefix (with any separators)
-    name = re.sub(r'^\d+\s*[-\s]*', '', name)
+    # Remove number prefix (with any separators including underscores)
+    name = re.sub(r'^\d+\s*[-_\s]*', '', name)
     # Remove "O'Clock" prefix if present
     name = re.sub(r"^\d+\s+O'Clock\s+", '', name, flags=re.IGNORECASE)
+    # Replace underscores with spaces BEFORE other processing
+    name = name.replace('_', ' ')
     # Remove instrument suffixes
-    name = re.sub(r'\s+(alto\d*|flute|drums|bass|NEW).*$', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'\s+(alto\d*|flute|drums|bass|soprano|edit|orig|concert|NEW).*$', '', name, flags=re.IGNORECASE)
     # Remove anything in parentheses or after dashes
     name = re.sub(r'\s*[\(\-].*$', '', name)
     # Remove apostrophes, commas, periods, and numbers
     name = re.sub(r"[''\u2018\u2019,.\d]", '', name)
+    # Add spaces before capital letters (for SnakeCase/camelCase)
+    name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
+    # Collapse multiple spaces into one
+    name = re.sub(r'\s+', ' ', name)
     # Remove trailing whitespace and dashes
     name = name.strip().rstrip('-').strip()
     # Lowercase everything
@@ -77,7 +83,6 @@ def clean_filename(filename: str) -> str:
         return ''
     
     return f"{number} {name}"
-
 def create_file_matrix(folder_dict: dict) -> pd.DataFrame:
     # Clean all filenames first
     cleaned_dict = {}
